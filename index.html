@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="theme-color" content="#f9f9f7">
+  <title>胡萝卜教材 · Ocean Wave</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="assets/styles.css">
+  <link rel="stylesheet" href="assets/textbook-reference.css">
+  <link rel="stylesheet" href="assets/textbook-activities.css">
+  <link rel="stylesheet" href="public.css">
+  <script>try{var k=localStorage.getItem('ow-public-skin-v1');if(/^(felt|teal|slate|paper|mist|sage)$/.test(k))document.documentElement.dataset.skin=k}catch(e){}</script>
+  <script>globalThis.process ??= {argv:[]};</script>
+  <script type="importmap">{"imports":{"node:fs":"./assets/lib/node-stub.mjs","node:path":"./assets/lib/node-stub.mjs","node:url":"./assets/lib/node-stub.mjs","node:child_process":"./assets/lib/node-stub.mjs"}}</script>
+</head>
+<body>
+  <header class="topbar">
+    <a href="#/notes/text" class="brand">Ocean Wave</a>
+    <nav id="nav"><a href="#/notes/text" class="active">教材</a></nav>
+    <input type="search" id="search" class="topbar-search" placeholder="搜索教材" aria-label="搜索教材">
+    <button type="button" id="skin" class="btn skin">外观</button>
+  </header>
+  <div id="toast" class="toast" hidden></div>
+  <main id="view"><p class="loading">正在打开教材…</p></main>
+  <script type="module" src="public-app.mjs"></script>
+</body>
+</html>
