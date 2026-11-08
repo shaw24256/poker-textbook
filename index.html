@@ -1,12 +1,14 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-public-catalog>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex,nofollow">
   <meta name="theme-color" content="#f9f9f7">
+  <meta name="public-data" content="./catalog.json?v=896e8e172addef1c">
   <title>胡萝卜教材 · Ocean Wave</title>
   <link rel="icon" href="data:,">
+  <script>try{const url=new URL(document.querySelector('meta[name="public-data"]').content,document.baseURI).href;if(localStorage.getItem('ow-public-textbook-catalog-cache')!==url){const link=document.createElement('link');link.rel='preload';link.as='fetch';link.crossOrigin='anonymous';link.href=url;document.head.append(link)}}catch(e){}</script>
   <link rel="stylesheet" href="assets/styles.css">
   <link rel="stylesheet" href="assets/textbook-reference.css">
   <link rel="stylesheet" href="assets/textbook-activities.css">
@@ -14,6 +16,38 @@
   <script>try{var k=localStorage.getItem('ow-public-skin-v1');if(/^(felt|teal|slate|paper|mist|sage)$/.test(k))document.documentElement.dataset.skin=k}catch(e){}</script>
   <script>globalThis.process ??= {argv:[]};</script>
   <script type="importmap">{"imports":{"node:fs":"./assets/lib/node-stub.mjs","node:path":"./assets/lib/node-stub.mjs","node:url":"./assets/lib/node-stub.mjs","node:child_process":"./assets/lib/node-stub.mjs"}}</script>
+  <link rel="modulepreload" href="assets/lib/annotate-core.mjs">
+  <link rel="modulepreload" href="assets/lib/annotate.mjs">
+  <link rel="modulepreload" href="assets/lib/article.mjs">
+  <link rel="modulepreload" href="assets/lib/docs.mjs">
+  <link rel="modulepreload" href="assets/lib/dom.mjs">
+  <link rel="modulepreload" href="assets/lib/entry.mjs">
+  <link rel="modulepreload" href="assets/lib/ev-tree-view.mjs">
+  <link rel="modulepreload" href="assets/lib/ev-tree.mjs">
+  <link rel="modulepreload" href="assets/lib/flop-settings.mjs">
+  <link rel="modulepreload" href="assets/lib/keys.mjs">
+  <link rel="modulepreload" href="assets/lib/my-hands.mjs">
+  <link rel="modulepreload" href="assets/lib/node-stub.mjs">
+  <link rel="modulepreload" href="assets/lib/paired-flop-data.mjs">
+  <link rel="modulepreload" href="assets/lib/paired-flop.mjs">
+  <link rel="modulepreload" href="assets/lib/range-parser.mjs">
+  <link rel="modulepreload" href="assets/lib/river-line.mjs">
+  <link rel="modulepreload" href="assets/lib/skin.mjs">
+  <link rel="modulepreload" href="assets/lib/sortable.mjs">
+  <link rel="modulepreload" href="assets/lib/suits.mjs">
+  <link rel="modulepreload" href="assets/lib/textbook-activities.mjs">
+  <link rel="modulepreload" href="assets/lib/textbook-interactions.mjs">
+  <link rel="modulepreload" href="assets/lib/textbook-reference.mjs">
+  <link rel="modulepreload" href="assets/lib/textbook.mjs">
+  <link rel="modulepreload" href="assets/lib/toc.mjs">
+  <link rel="modulepreload" href="assets/vendor/marked.esm.js">
+  <link rel="modulepreload" href="assets/views/chapter-pilot.mjs">
+  <link rel="modulepreload" href="assets/views/my-hands.mjs">
+  <link rel="modulepreload" href="assets/views/notes-handouts.mjs">
+  <link rel="modulepreload" href="assets/views/notes-textbook.mjs?v=896e8e172addef1c">
+  <link rel="modulepreload" href="public-api.mjs?v=896e8e172addef1c">
+  <link rel="modulepreload" href="public-app.mjs?v=896e8e172addef1c">
+  <link rel="modulepreload" href="public-loader.mjs?v=896e8e172addef1c">
 </head>
 <body>
   <header class="topbar">
@@ -23,7 +57,8 @@
     <button type="button" id="skin" class="btn skin">外观</button>
   </header>
   <div id="toast" class="toast" hidden></div>
-  <main id="view"><p class="loading">正在打开教材…</p></main>
-  <script type="module" src="public-app.mjs"></script>
+  <main id="view"><p id="initial-loading" class="loading" role="status">正在打开教材…</p></main>
+  <script>setTimeout(()=>{const view=document.getElementById('view');if(document.getElementById('initial-loading')){view.replaceChildren();const p=document.createElement('p');p.textContent='连接较慢，教材还在加载。你可以稍后重试。';const b=document.createElement('button');b.className='btn';b.textContent='重新加载';b.onclick=()=>location.reload();view.append(p,b)}},12000);</script>
+  <script type="module" src="public-app.mjs?v=896e8e172addef1c"></script>
 </body>
 </html>

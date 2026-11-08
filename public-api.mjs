@@ -1,7 +1,22 @@
 const STATE_KEY = 'ow-public-textbook-state-v1';
 const json = (value, status=200) => new Response(JSON.stringify(value), {status,headers:{'Content-Type':'application/json'}});
-export function installPublicApi(snapshot, storage=()=>localStorage) {
+export function installPublicApi(snapshot, storage=()=>localStorage, loadJSON) {
   const realFetch = globalThis.fetch.bind(globalThis);
+  const load=loadJSON || (path=>realFetch(new URL(path,globalThis.document?.baseURI || 'https://example.invalid/')).then(r=>{if(!r.ok)throw Error('教材未载入');return r.json();}));
+  const pending=new Map();
+  async function loadDoc(path) {
+    if(!Object.hasOwn(snapshot.docs,path))return null;
+    if(typeof snapshot.docs[path].body==='string')return snapshot.docs[path];
+    if(!snapshot.chapterFiles?.[path])return null;
+    if(!pending.has(path))pending.set(path,load(snapshot.chapterFiles[path]).then(doc=>{snapshot.docs[path]=doc;return doc;}).catch(error=>{pending.delete(path);throw error;}));
+    return pending.get(path);
+  }
+  let allLoading;
+  async function loadAll() {
+    if(Object.values(snapshot.docs).every(d=>typeof d.body==='string'))return;
+    if(!allLoading)allLoading=load(`./textbook.json?v=${snapshot.version}`).then(full=>Object.assign(snapshot.docs,full.docs)).catch(error=>{allLoading=null;throw error;});
+    await allLoading;
+  }
   const read = () => {
     try {
       const value = JSON.parse(storage().getItem(STATE_KEY) || '{}');
@@ -24,14 +39,26 @@ export function installPublicApi(snapshot, storage=()=>localStorage) {
       if(url.pathname==='/api/handouts')return json(snapshot.chapters);
       if(url.pathname==='/api/doc') {
         const path=url.searchParams.get('path');
-        const doc=Object.hasOwn(snapshot.docs,path) ? snapshot.docs[path] : null;
+        const doc=await loadDoc(path);
         return doc ? json(documentOf(doc,state)) : json({error:'分享版没有这份文件'},404);
       }
-      if(url.pathname==='/api/docs')return json(Object.values(snapshot.docs).map(doc=>{
+      if(url.pathname==='/api/public-texts') {
+        const full=url.searchParams.get('full')==='1';
+        if(full)await loadAll();
+        return json(snapshot.chapters.map(c=>{
+          const doc=documentOf(snapshot.docs[c.text],read());
+          if(!full && snapshot.summaries)delete doc.body;
+          return {id:c.id,doc,parsed:full ? null : snapshot.summaries?.find(s=>s.id===c.id)?.parsed};
+        }));
+      }
+      if(url.pathname==='/api/docs') {
+        if(url.searchParams.get('body')==='1')await loadAll();
+        return json(Object.values(snapshot.docs).map(doc=>{
         const value=documentOf(doc,state);
         if(url.searchParams.get('body')!=='1')delete value.body;
         return value;
-      }));
+        }));
+      }
       if(url.pathname==='/api/annotations') {
         const path=url.searchParams.get('path');
         return Object.hasOwn(snapshot.docs,path) ? json({annotations:state.notes[path] || []}) : json({error:'不在分享范围'},404);

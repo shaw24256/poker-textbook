@@ -1,13 +1,15 @@
-import { renderTextIndex, renderTextChapter, renderTopic } from './assets/views/notes-textbook.mjs';
+import { renderTextIndex, renderTextChapter, renderTopic } from './assets/views/notes-textbook.mjs?v=896e8e172addef1c';
 import { h } from './assets/lib/dom.mjs';
 import { mountNav, mountToc } from './assets/lib/toc.mjs';
 import { mountSkinPicker } from './assets/lib/skin.mjs';
 import { installKeys, setPageKeys } from './assets/lib/keys.mjs';
 import { autoSort } from './assets/lib/sortable.mjs';
-import { installPublicApi } from './public-api.mjs';
+import { installPublicApi } from './public-api.mjs?v=896e8e172addef1c';
+import { loadPublicJSON } from './public-loader.mjs?v=896e8e172addef1c';
 
-const snapshot=await fetch('./textbook.json').then(r=>{if(!r.ok)throw Error('教材未载入');return r.json();});
-installPublicApi(snapshot);
+async function start() {
+const snapshot=await loadPublicJSON(document.querySelector('meta[name="public-data"]')?.content || './textbook.json');
+installPublicApi(snapshot,()=>localStorage,loadPublicJSON);
 const view=document.getElementById('view');
 const search=document.getElementById('search');
 let cleanup,sequence=0;
@@ -53,6 +55,8 @@ async function route() {
   const query=Object.fromEntries(new URLSearchParams(qs));
   if(document.activeElement!==search)search.value=id==='search' ? query.q || '' : '';
   const toc=h('nav',{class:'toc','aria-label':'教材目录'}),content=h('div',{class:'content'});
+  const loading=h('p',{class:'muted',role:'status',textContent:'正在读取内容…'});
+  content.append(loading);
   view.replaceChildren(h('div',{class:'layout'},toc,content));
   window.scrollTo(0,0);
   try {
@@ -63,11 +67,13 @@ async function route() {
     else if(id==='search')await renderSearch(content,query);
     else await renderTextIndex(content);
     if(turn!==sequence)return;
+    loading.remove();
     if(rendered?.nav)mountNav(toc,rendered.nav);else mountToc(toc,content);
     removeExcludedLinks(content);
     document.title=`${content.querySelector('h1')?.textContent || '胡萝卜教材'} · Ocean Wave`;
     cleanup=rendered?.onMounted?.();
-  } catch(error) {if(turn===sequence)content.append(h('p',{class:'error',textContent:`读取失败：${error.message}`}));}
+    if(content.querySelector('.error'))content.append(h('button',{class:'btn',type:'button',textContent:'重试',onclick:()=>route()}));
+  } catch(error) {loading.remove();if(turn===sequence)content.append(h('p',{class:'error',textContent:`读取失败：${error.message}`}),h('button',{class:'btn',type:'button',textContent:'重试',onclick:()=>route()}));}
 }
 let timer;
 search.addEventListener('input',()=>{clearTimeout(timer);timer=setTimeout(()=>{location.hash=`#/search?q=${encodeURIComponent(search.value.trim())}`;},250);});
@@ -75,3 +81,9 @@ search.addEventListener('keydown',e=>{if(e.key==='Escape')search.blur();});
 addEventListener('keydown',e=>{if(e.key==='/'&&!e.ctrlKey&&!e.metaKey&&!/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName)){e.preventDefault();search.focus();}});
 addEventListener('hashchange',route);
 await route();
+}
+start().catch(error=>{
+  const view=document.getElementById('view');
+  const retry=h('button',{class:'btn',type:'button',textContent:'重新加载',onclick:()=>location.reload()});
+  view.replaceChildren(h('section',{class:'reader'},h('h1',{textContent:'教材暂时没有打开'}),h('p',{textContent:error.message || '连接不稳定，请重新加载。'}),retry));
+});
