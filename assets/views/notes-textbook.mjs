@@ -41,6 +41,11 @@ async function loadBase() {
 
 // 全部章文件（目录页、主题页要）：[{ c, doc, parsed }]
 async function loadTexts(base) {
+  if (document.documentElement.hasAttribute('data-public-catalog')) {
+    const full = location.hash.includes('/notes/topic/');
+    const texts = await getJson('/api/public-texts' + (full ? '?full=1' : ''));
+    return texts.map(t => ({ c: base.byId.get(t.id), doc: t.doc, parsed: t.parsed || parseChapter(t.doc.body) }));
+  }
   const withText = base.chapters.filter((c) => c.text);
   const docs = await Promise.all(withText.map((c) => loadDoc(c.text).catch(() => null)));
   return withText.map((c, i) => docs[i] && { c, doc: docs[i], parsed: parseChapter(docs[i].body) }).filter(Boolean);
@@ -214,8 +219,6 @@ export async function renderTextIndex(root) {
     h('button', { type: 'button', class: 'btn', textContent: '按章阅读', onclick: () => byChapter.scrollIntoView() }),
     h('button', { type: 'button', class: 'btn', textContent: '按主题推演', onclick: () => byTopic.scrollIntoView() }));
   page.append(jumps, h('div', { class: 'tb-index' }, byChapter, byTopic), questionList(base, base.concepts.questions, true));
-  const problems = problemsCard(base, texts);
-  if (problems) page.append(problems);
 }
 
 function topicCount(g, texts, base) {
@@ -347,7 +350,7 @@ export async function renderTextChapter(root, id, query = {}) {
   setPageKeys({ hint: '上一章 / 下一章', left: prev ? () => { location.hash = textHref(prev.id); } : null, right: next ? () => { location.hash = textHref(next.id); } : null });
   const ctx = { ...base.ctx, chapter: c };
   const b = { path: c.text ?? textPath(c.id), docSet: base.docSet };
-  const [doc, study] = await Promise.all([c.text ? loadDoc(c.text).catch(() => null) : null, c.study ? loadDoc(c.study).catch(() => null) : null]);
+  const [doc, study] = await Promise.all([c.text ? loadDoc(c.text) : null, c.study ? loadDoc(c.study).catch(() => null) : null]);
   const pilot = id === PILOT && !!doc;
   const compare = !!doc && c.pdf;
   let points = [];
